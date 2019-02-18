@@ -1,0 +1,88 @@
+apply plugin: 'com.android.application'
+
+android {
+    compileSdkVersion 26
+
+    signingConfigs {
+        release {
+            keyAlias 'xter'
+            keyPassword 'hhll3131'
+            storeFile file('../xter.jks')
+            storePassword 'hhhhllll'
+        }
+    }
+
+    defaultConfig {
+        applicationId "com.xter.slimtoolbox"
+        minSdkVersion 16
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+        flavorDimensions "versionCode"
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+    buildTypes {
+        release {
+            //开启混合
+            minifyEnabled true
+//            //开启简单优化
+//            zipAlignEnabled true
+//            // 移除无用的resource文件
+//            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+
+            applicationVariants.all { variant ->
+                variant.outputs.all { output ->
+                    if (variant.buildType.name.equals('release')) {
+                        outputFileName = "SlimToolbox_V${defaultConfig.versionName}_${variant.productFlavors[0].getName()}.apk"
+                    } else if (variant.buildType.name.equals('debug')) {
+                        outputFileName = "SlimToolbox_V${defaultConfig.versionName}_debug.apk"
+                    }
+                }
+            }
+        }
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+
+            signingConfig signingConfigs.release
+        }
+    }
+
+    productFlavors {
+        xter {
+            applicationId = "com.xter.slimtoolbox"
+            manifestPlaceholders = [UMENG_CHANNEL_VALUE: "xter"]
+        }
+        baidu {
+            applicationId = "com.baidu.slimtoolbox"
+            manifestPlaceholders = [UMENG_CHANNEL_VALUE: "baidu"]
+        }
+        wandoujia {
+            applicationId = "com.wandoujia.slimtoolbox"
+            manifestPlaceholders = [UMENG_CHANNEL_VALUE: "wandoujia"]
+        }
+    }
+}
+
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+    implementation 'com.android.support.constraint:constraint-layout:1.1.0'
+    implementation 'com.android.support:design:26.1.0'
+    implementation 'com.android.support:recyclerview-v7:26.1.0'
+    implementation 'com.jakewharton:butterknife:8.8.1'
+    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
+    implementation 'pub.devrel:easypermissions:1.0.1'
+    compile 'com.jaredrummler:android-processes:1.1.1'
+
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'com.android.support.test:runner:1.0.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+    androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+    }
+}
