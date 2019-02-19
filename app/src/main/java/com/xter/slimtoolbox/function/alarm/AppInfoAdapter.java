@@ -1,4 +1,4 @@
-package com.xter.slimtoolbox.adapter.function;
+package com.xter.slimtoolbox.function.alarm;
 
 import android.content.Context;
 import android.view.View;
@@ -7,8 +7,9 @@ import android.widget.TextView;
 
 import com.xter.slimtoolbox.R;
 import com.xter.slimtoolbox.adapter.QuickAdapter;
-import com.xter.slimtoolbox.entity.AppInfo;
+import com.xter.slimtoolbox.function.alarm.entity.AppInfo;
 
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -31,5 +32,15 @@ public class AppInfoAdapter extends QuickAdapter<AppInfo> {
 		ivApp.setImageDrawable(appInfo.drawable);
 
 		return convertView;
+	}
+
+	public void remove(String packageName){
+		Iterator<AppInfo> infoIterator = data.iterator();
+		while(infoIterator.hasNext()){
+			if(infoIterator.next().processName.equals(packageName)){
+				infoIterator.remove();
+			}
+		}
+		notifyDataSetChanged();
 	}
 }

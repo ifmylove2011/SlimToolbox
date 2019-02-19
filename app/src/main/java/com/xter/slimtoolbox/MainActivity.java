@@ -9,13 +9,14 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 
 import com.xter.slimtoolbox.adapter.QuickItemDecoration;
 import com.xter.slimtoolbox.adapter.QuickRecycleAdapter;
-import com.xter.slimtoolbox.adapter.function.ToolsAdapter;
+import com.xter.slimtoolbox.function.main.ToolsAdapter;
 import com.xter.slimtoolbox.component.BaseActivity;
-import com.xter.slimtoolbox.entity.ToolInfo;
-import com.xter.slimtoolbox.fragment.AlarmFragment;
+import com.xter.slimtoolbox.function.alarm.AlarmFragment;
+import com.xter.slimtoolbox.function.main.entity.ToolInfo;
 import com.xter.slimtoolbox.util.ActivityUtil;
 import com.xter.slimtoolbox.util.L;
 import com.xter.slimtoolbox.util.RootCmd;
@@ -25,12 +26,17 @@ import java.util.List;
 
 import pub.devrel.easypermissions.EasyPermissions;
 
-public class MainActivity extends BaseActivity implements EasyPermissions.PermissionCallbacks{
+public class MainActivity extends BaseActivity implements EasyPermissions.PermissionCallbacks {
 
+
+	Toolbar toolbar;
 	/**
 	 * 功能列表
 	 */
 	RecyclerView rvTools;
+
+
+	TextView tvToolName;
 
 	ToolsAdapter toolsAdapter;
 
@@ -43,16 +49,18 @@ public class MainActivity extends BaseActivity implements EasyPermissions.Permis
 		L.DEBUG = true;
 		setContentView(R.layout.activity_main);
 
-		Toolbar toolbar = findViewById(R.id.toolbar);
+		toolbar = findViewById(R.id.toolbar);
 		setSupportActionBar(toolbar);
 
 		rvTools = findViewById(R.id.rv_tools);
 		rvTools.addItemDecoration(new QuickItemDecoration(this, QuickItemDecoration.VERTICAL_LIST));
 		rvTools.setLayoutManager(new GridLayoutManager(this, 3));
+		tvToolName = findViewById(R.id.tv_tool_name);
 	}
 
 	@Override
 	protected void initData() {
+
 		List<ToolInfo> toolInfoList = new ArrayList<>();
 		toolInfoList.add(new ToolInfo("定时开关APP或者开关机", "定时开关", R.drawable.alarm_clock));
 
@@ -86,6 +94,19 @@ public class MainActivity extends BaseActivity implements EasyPermissions.Permis
 		return super.onOptionsItemSelected(item);
 	}
 
+	@Override
+	protected void onBackStackChangedInBaseActivity() {
+		String tagTop = ActivityUtil.getTopFragmentTag(getSupportFragmentManager());
+		switch (tagTop) {
+			case ALARM:
+				tvToolName.setText(R.string.alarm);
+				break;
+			default:
+				tvToolName.setText(R.string.slim_tool);
+				break;
+		}
+	}
+
 	private boolean checkPermission(Activity context, String[] perms) {
 		return EasyPermissions.hasPermissions(context, perms);
 	}
@@ -94,7 +115,7 @@ public class MainActivity extends BaseActivity implements EasyPermissions.Permis
 		switch (index) {
 			case 0:
 				String[] perms = {Manifest.permission.KILL_BACKGROUND_PROCESSES};
-				if (checkPermission(this, perms)&&RootCmd.haveRoot()) {
+				if (checkPermission(this, perms) && RootCmd.haveRoot()) {
 					AlarmFragment alarmFragment = AlarmFragment.newInstance();
 					ActivityUtil.showFragment(getSupportFragmentManager(), R.id.fl_content, alarmFragment, ALARM);
 				} else {
@@ -112,7 +133,7 @@ public class MainActivity extends BaseActivity implements EasyPermissions.Permis
 
 	@Override
 	public void onPermissionsGranted(int requestCode, List<String> perms) {
-		switch (requestCode){
+		switch (requestCode) {
 			case CODE_KILLPROCESS:
 				L.w("已获取杀死后台进程权限");
 				selectTool(0);
@@ -122,7 +143,7 @@ public class MainActivity extends BaseActivity implements EasyPermissions.Permis
 
 	@Override
 	public void onPermissionsDenied(int requestCode, List<String> perms) {
-		switch (requestCode){
+		switch (requestCode) {
 			case CODE_KILLPROCESS:
 				L.w("杀死后台进程权限被限制");
 				break;

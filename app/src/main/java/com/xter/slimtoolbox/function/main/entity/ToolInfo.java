@@ -1,4 +1,4 @@
-package com.xter.slimtoolbox.entity;
+package com.xter.slimtoolbox.function.main.entity;
 
 import java.io.Serializable;
 

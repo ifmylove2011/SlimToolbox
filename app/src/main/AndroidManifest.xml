@@ -22,7 +22,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <receiver android:name=".AlarmKillBroadCast"/>
+        <receiver android:name=".function.alarm.AlarmKillBroadCast"/>
     </application>
 
 </manifest>

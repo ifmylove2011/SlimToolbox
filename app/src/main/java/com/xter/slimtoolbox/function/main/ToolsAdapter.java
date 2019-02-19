@@ -1,4 +1,4 @@
-package com.xter.slimtoolbox.adapter.function;
+package com.xter.slimtoolbox.function.main;
 
 import android.content.Context;
 import android.widget.ImageView;
@@ -7,7 +7,7 @@ import android.widget.TextView;
 import com.xter.slimtoolbox.R;
 import com.xter.slimtoolbox.adapter.QuickRecycleAdapter;
 import com.xter.slimtoolbox.adapter.ViewHolder;
-import com.xter.slimtoolbox.entity.ToolInfo;
+import com.xter.slimtoolbox.function.main.entity.ToolInfo;
 
 import java.util.List;
 

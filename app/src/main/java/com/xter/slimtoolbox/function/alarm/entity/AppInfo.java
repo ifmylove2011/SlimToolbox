@@ -1,4 +1,4 @@
-package com.xter.slimtoolbox.entity;
+package com.xter.slimtoolbox.function.alarm.entity;
 
 import android.graphics.drawable.Drawable;
 
@@ -32,6 +32,21 @@ public class AppInfo implements Serializable {
 		this.processName = processName;
 		this.appName = appName;
 		this.drawable = drawable;
+	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		AppInfo appInfo = (AppInfo) o;
+
+		return processName != null ? processName.equals(appInfo.processName) : appInfo.processName == null;
+	}
+
+	@Override
+	public int hashCode() {
+		return processName != null ? processName.hashCode() : 0;
 	}
 
 	@Override

@@ -1,4 +1,4 @@
-package com.xter.slimtoolbox.fragment;
+package com.xter.slimtoolbox.function.alarm;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
@@ -8,6 +8,9 @@ import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.v7.widget.GridLayoutManager;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,12 +21,18 @@ import android.widget.TimePicker;
 
 import com.jaredrummler.android.processes.AndroidProcesses;
 import com.jaredrummler.android.processes.models.AndroidAppProcess;
-import com.xter.slimtoolbox.AlarmKillBroadCast;
 import com.xter.slimtoolbox.R;
-import com.xter.slimtoolbox.adapter.function.AppInfoAdapter;
+import com.xter.slimtoolbox.adapter.QuickItemDecoration;
+import com.xter.slimtoolbox.adapter.QuickRecycleAdapter;
 import com.xter.slimtoolbox.component.BaseFragment;
-import com.xter.slimtoolbox.entity.AppInfo;
+import com.xter.slimtoolbox.function.alarm.entity.AlarmTaskInfo;
+import com.xter.slimtoolbox.function.alarm.entity.AppInfo;
 import com.xter.slimtoolbox.util.L;
+import com.xter.slimtoolbox.util.SysUtil;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -56,6 +65,8 @@ public class AlarmFragment extends BaseFragment {
 	 */
 	Spinner spinner;
 
+	RecyclerView rvAddedTask;
+
 	/**
 	 * 各种系统级管理器
 	 */
@@ -64,6 +75,7 @@ public class AlarmFragment extends BaseFragment {
 	PackageManager pm;
 
 	AppInfoAdapter appInfoAdapter;
+	AlarmTaskAdapter alarmTaskAdapter;
 
 	@Override
 	public View inflate(LayoutInflater inflater, ViewGroup container) {
@@ -72,6 +84,8 @@ public class AlarmFragment extends BaseFragment {
 
 	@Override
 	public void initData(View rootView, Bundle savedInstanceState) {
+		EventBus.getDefault().register(this);
+
 		am = (AlarmManager) getActivity().getSystemService(ALARM_SERVICE);
 		manager = (ActivityManager) getActivity().getSystemService(Context.ACTIVITY_SERVICE);
 		pm = getActivity().getPackageManager();
@@ -107,7 +121,27 @@ public class AlarmFragment extends BaseFragment {
 		btnOk.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
-				setAlarm(picker.getCurrentHour(), picker.getCurrentMinute(), appInfoList.get(spinner.getSelectedItemPosition()).processName);
+				setAlarm(picker.getCurrentHour(), picker.getCurrentMinute(), appInfoList.get(spinner.getSelectedItemPosition()));
+			}
+		});
+
+		rvAddedTask = rootView.findViewById(R.id.rv_added_task);
+		alarmTaskAdapter = new AlarmTaskAdapter(getActivity(), R.layout.alarm_task_info, null);
+		rvAddedTask.addItemDecoration(new QuickItemDecoration(getActivity(), QuickItemDecoration.VERTICAL_LIST));
+		rvAddedTask.setLayoutManager(new LinearLayoutManager(getActivity()));
+		rvAddedTask.setAdapter(alarmTaskAdapter);
+		alarmTaskAdapter.setOnItemClickLitener(new QuickRecycleAdapter.OnItemClickLitener() {
+			@Override
+			public void onItemClick(View view, int position) {
+
+			}
+
+			@Override
+			public void onItemLongClick(View view, int position) {
+				//取消任务
+				AlarmTaskInfo info = alarmTaskAdapter.getItem(position);
+				am.cancel(info.intent);
+				alarmTaskAdapter.remove(info);
 			}
 		});
 	}
@@ -115,15 +149,16 @@ public class AlarmFragment extends BaseFragment {
 	/**
 	 * 给明时间与目标
 	 *
-	 * @param hour        时
-	 * @param minute      分
-	 * @param packageName 目标包名
+	 * @param hour    时
+	 * @param minute  分
+	 * @param appInfo 目标信息
 	 */
-	private void setAlarm(int hour, int minute, String packageName) {
+	private void setAlarm(int hour, int minute, AppInfo appInfo) {
+		//PendingIntent，否则多个alarm会被覆盖为一个
 		Intent intent = new Intent(getActivity(), AlarmKillBroadCast.class);
-		intent.putExtra("packageName", packageName);
+		intent.putExtra("packageName", appInfo.processName);
 
-		PendingIntent pi = PendingIntent.getBroadcast(getActivity(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+		PendingIntent pi = PendingIntent.getBroadcast(getActivity(), appInfo.hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
 
 		Calendar c = Calendar.getInstance();
 		c.set(Calendar.HOUR_OF_DAY, hour);
@@ -132,22 +167,8 @@ public class AlarmFragment extends BaseFragment {
 
 		am.set(AlarmManager.RTC_WAKEUP,
 				c.getTimeInMillis(), pi);
-	}
 
-	@Deprecated
-	private void getProcess() {
-		List<ActivityManager.RunningAppProcessInfo> infos = manager.getRunningAppProcesses();
-		for (ActivityManager.RunningAppProcessInfo appProcessInfo : infos) {
-			L.d(appProcessInfo.processName);
-		}
-
-		List<ActivityManager.RunningServiceInfo> serviceInfos = manager.getRunningServices(100);
-		for (ActivityManager.RunningServiceInfo serviceInfo : serviceInfos) {
-			AppInfo appInfo = getAppInfo(serviceInfo.process);
-			if (appInfo != null) {
-				L.d(appInfo.toString());
-			}
-		}
+		alarmTaskAdapter.add(new AlarmTaskInfo(appInfo.appName, appInfo.drawable, SysUtil.getTime(c.getTimeInMillis()), appInfo.processName, pi));
 	}
 
 	/**
@@ -182,5 +203,17 @@ public class AlarmFragment extends BaseFragment {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	@Subscribe(threadMode = ThreadMode.MAIN)
+	public void onRemoveItem(RemoveAppItemEvent event) {
+		appInfoAdapter.remove(event.packageName);
+		alarmTaskAdapter.remove(event.packageName);
+	}
+
+	@Override
+	public void onDestroyView() {
+		EventBus.getDefault().unregister(this);
+		super.onDestroyView();
 	}
 }
