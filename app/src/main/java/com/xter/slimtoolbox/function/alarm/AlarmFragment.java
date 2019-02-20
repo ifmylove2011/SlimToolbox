@@ -7,7 +7,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -28,12 +30,14 @@ import com.xter.slimtoolbox.component.BaseFragment;
 import com.xter.slimtoolbox.function.alarm.entity.AlarmTaskInfo;
 import com.xter.slimtoolbox.function.alarm.entity.AppInfo;
 import com.xter.slimtoolbox.util.L;
+import com.xter.slimtoolbox.util.RootCmd;
 import com.xter.slimtoolbox.util.SysUtil;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -102,7 +106,7 @@ public class AlarmFragment extends BaseFragment {
 		});
 
 		spinner = rootView.findViewById(R.id.sp_process);
-		final List<AppInfo> appInfoList = getAppList();
+		final List<AppInfo> appInfoList = AppInfoCatcher.getAppList(pm);
 		appInfoAdapter = new AppInfoAdapter(getActivity(), R.layout.app_info, appInfoList);
 		spinner.setAdapter(appInfoAdapter);
 		spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -171,39 +175,6 @@ public class AlarmFragment extends BaseFragment {
 		alarmTaskAdapter.add(new AlarmTaskInfo(appInfo.appName, appInfo.drawable, SysUtil.getTime(c.getTimeInMillis()), appInfo.processName, pi));
 	}
 
-	/**
-	 * 第三方库，拿到所有后台运行应用的信息，目前是7.1以下可用
-	 *
-	 * @return appInfo
-	 */
-	private List<AppInfo> getAppList() {
-		List<AndroidAppProcess> processes = AndroidProcesses.getRunningAppProcesses();
-		List<AppInfo> appInfoList = new ArrayList<>();
-
-		for (AndroidAppProcess process : processes) {
-			AppInfo appInfo = getAppInfo(process.getPackageName());
-			if (appInfo != null) {
-				appInfoList.add(appInfo);
-			}
-		}
-		return appInfoList;
-	}
-
-	/**
-	 * 通过包名拿到信息
-	 *
-	 * @param packageName 包名
-	 * @return appInfo
-	 */
-	private AppInfo getAppInfo(String packageName) {
-		try {
-			ApplicationInfo applicationInfo = pm.getApplicationInfo(packageName, PackageManager.GET_META_DATA);
-			return new AppInfo(packageName, (String) pm.getApplicationLabel(applicationInfo), pm.getApplicationIcon(applicationInfo));
-		} catch (PackageManager.NameNotFoundException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
 
 	@Subscribe(threadMode = ThreadMode.MAIN)
 	public void onRemoveItem(RemoveAppItemEvent event) {

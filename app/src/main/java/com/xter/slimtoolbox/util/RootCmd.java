@@ -36,7 +36,7 @@ public class RootCmd {
 	 * 执行命令并且输出结果
 	 */
 	public static String execRootCmd(String cmd) {
-		String result = "";
+		StringBuilder result = new StringBuilder();
 		DataOutputStream dos = null;
 		DataInputStream dis = null;
 
@@ -45,15 +45,13 @@ public class RootCmd {
 			dos = new DataOutputStream(p.getOutputStream());
 			dis = new DataInputStream(p.getInputStream());
 
-			System.out.println(cmd);
 			dos.writeBytes(cmd + "\n");
 			dos.flush();
 			dos.writeBytes("exit\n");
 			dos.flush();
 			String line = null;
 			while ((line = dis.readLine()) != null) {
-				Log.d("result", line);
-				result += line;
+				result.append(line).append("\r\n");
 			}
 			p.waitFor();
 		} catch (Exception e) {
@@ -74,7 +72,7 @@ public class RootCmd {
 				}
 			}
 		}
-		return result;
+		return result.toString();
 	}
 
 	/**

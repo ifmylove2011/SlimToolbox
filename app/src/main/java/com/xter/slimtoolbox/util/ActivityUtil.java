@@ -155,7 +155,6 @@ public class ActivityUtil {
 		RootCmd.execRootCmd("am force-stop "+packageName);
 	}
 
-
 	@Deprecated
 	public static void forceStopProgress(Context context, String pkgName) {
 		ActivityManager am = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
