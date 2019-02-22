@@ -5,12 +5,8 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -21,8 +17,6 @@ import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.TimePicker;
 
-import com.jaredrummler.android.processes.AndroidProcesses;
-import com.jaredrummler.android.processes.models.AndroidAppProcess;
 import com.xter.slimtoolbox.R;
 import com.xter.slimtoolbox.adapter.QuickItemDecoration;
 import com.xter.slimtoolbox.adapter.QuickRecycleAdapter;
@@ -30,15 +24,12 @@ import com.xter.slimtoolbox.component.BaseFragment;
 import com.xter.slimtoolbox.function.alarm.entity.AlarmTaskInfo;
 import com.xter.slimtoolbox.function.alarm.entity.AppInfo;
 import com.xter.slimtoolbox.util.L;
-import com.xter.slimtoolbox.util.RootCmd;
 import com.xter.slimtoolbox.util.SysUtil;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.io.File;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -168,6 +159,10 @@ public class AlarmFragment extends BaseFragment {
 		c.set(Calendar.HOUR_OF_DAY, hour);
 		c.set(Calendar.MINUTE, minute);
 		c.set(Calendar.SECOND, 0);
+
+		if (c.getTimeInMillis() < System.currentTimeMillis()) {
+			c.add(Calendar.DATE, 1);
+		}
 
 		am.set(AlarmManager.RTC_WAKEUP,
 				c.getTimeInMillis(), pi);
